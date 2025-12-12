@@ -9,14 +9,16 @@ import { twMerge } from 'tailwind-merge';
 interface PersonaBubbleProps {
     persona: Persona;
     userMessage: string;
+    history?: any[];
     onFinish?: (content: string) => void;
 }
 
-export function PersonaBubble({ persona, userMessage, onFinish }: PersonaBubbleProps) {
+export function PersonaBubble({ persona, userMessage, history = [], onFinish }: PersonaBubbleProps) {
     const { completion, complete, isLoading } = useCompletion({
         api: '/api/chat/persona',
         body: {
             systemPrompt: persona.systemInstruction,
+            history: history,
         },
         onFinish: (prompt, completion) => {
             onFinish?.(completion);

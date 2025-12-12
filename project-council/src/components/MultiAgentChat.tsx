@@ -4,13 +4,17 @@ import { useState, useRef, useEffect } from 'react';
 import { usePersonaStore } from '@/src/store/persona-store';
 import { PersonaBubble } from './PersonaBubble';
 import { Send, User as UserIcon } from 'lucide-react';
+import { clsx } from 'clsx';
 
 interface ChatTurn {
     id: string;
+    type: 'user' | 'auto';
     userMessage: string; // Shown in UI
     prompt: string;      // Sent to API (if different)
     activePersonaIds: string[];
 }
+
+const MAX_AUTO_DEPTH = 2;
 
 export default function MultiAgentChat() {
     const { personas } = usePersonaStore();
@@ -26,6 +30,37 @@ export default function MultiAgentChat() {
         }
     }, [turns]);
 
+    // Automatic Debate Loop
+    useEffect(() => {
+        if (turns.length === 0) return;
+
+        const lastTurn = turns[turns.length - 1];
+
+        // Check if current turn is fully complete (all active personas responded)
+        const responsesForTurn = turnResponses[lastTurn.id] || {};
+        const isComplete = lastTurn.activePersonaIds.every(id => responsesForTurn[id]);
+
+        if (isComplete) {
+            // Calculate current auto-reply depth
+            let depth = 0;
+            for (let i = turns.length - 1; i >= 0; i--) {
+                if (turns[i].type === 'auto') {
+                    depth++;
+                } else {
+                    break;
+                }
+            }
+
+            if (depth < MAX_AUTO_DEPTH) {
+                // Small delay to make it feel natural
+                const timer = setTimeout(() => {
+                    triggerAutoReply(lastTurn);
+                }, 1000);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [turns, turnResponses]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
@@ -38,6 +73,7 @@ export default function MultiAgentChat() {
 
         const newTurn: ChatTurn = {
             id: Date.now().toString(),
+            type: 'user',
             userMessage: input,
             prompt: input,
             activePersonaIds: activePersonas.map((p) => p.id),
@@ -64,15 +100,12 @@ export default function MultiAgentChat() {
         }));
     };
 
-    const handleDebate = () => {
-        const lastTurn = turns[turns.length - 1];
-        if (!lastTurn) return;
-
-        const responses = turnResponses[lastTurn.id];
+    const triggerAutoReply = (prevTurn: ChatTurn) => {
+        const responses = turnResponses[prevTurn.id];
         if (!responses) return;
 
         // Construct debate context
-        let debateContext = `[User]: ${lastTurn.userMessage}\n\n`;
+        let debateContext = `[Previous Turn]: ${prevTurn.userMessage}\n\n`;
         Object.entries(responses).forEach(([pId, content]) => {
             const p = personas.find(params => params.id === pId);
             if (p) {
@@ -82,20 +115,26 @@ export default function MultiAgentChat() {
 
         debateContext += `\nInstructions: You are participating in a roundtable. Review the responses above. If you have a critical disagreement or an important build, state it CONCISELY. If you agree with everyone, say nothing or [AGREE].`;
 
-        // Pick a random persona or all active ones? 
-        // User request: "System selects one persona... or random selection"
-        // Let's pick a random active persona for now
-        const activeIds = lastTurn.activePersonaIds;
+        // Select a random active persona to respond (to avoid chaos of everyone talking at once)
+        // PRD: "Mitigation: Implement a 'Speaking Order' or limit active personas to 3 max."
+        const activeIds = prevTurn.activePersonaIds;
         const randomId = activeIds[Math.floor(Math.random() * activeIds.length)];
 
         const newTurn: ChatTurn = {
             id: Date.now().toString(),
+            type: 'auto',
             userMessage: "🔥 Debate Round Initiated...",
             prompt: debateContext,
             activePersonaIds: [randomId],
         };
 
         setTurns((prev) => [...prev, newTurn]);
+    };
+
+    // Manual override wrapper
+    const handleManualDebate = () => {
+        const lastTurn = turns[turns.length - 1];
+        if (lastTurn) triggerAutoReply(lastTurn);
     };
 
     return (
@@ -111,22 +150,48 @@ export default function MultiAgentChat() {
                     <div key={turn.id} className="space-y-4 animate-in fade-in duration-500">
                         {/* User Message */}
                         <div className="flex justify-end">
-                            <div className="bg-primary text-primary-foreground px-4 py-2 rounded-2xl rounded-tr-sm max-w-[80%] shadow-sm flex items-start gap-2">
+                            <div className={clsx(
+                                "px-4 py-2 rounded-2xl max-w-[80%] shadow-sm flex items-start gap-2",
+                                turn.type === 'user'
+                                    ? "bg-primary text-primary-foreground rounded-tr-sm"
+                                    : "bg-muted text-muted-foreground rounded-tl-sm w-full justify-center italic text-sm"
+                            )}>
                                 <span>{turn.userMessage}</span>
-                                {turn.userMessage.includes("Debate") ? <span className="text-lg">🔥</span> : <UserIcon className="w-4 h-4 mt-1 opacity-70" />}
+                                {turn.type === 'user' && <UserIcon className="w-4 h-4 mt-1 opacity-70" />}
                             </div>
                         </div>
+
 
                         {/* Parallel Persona Responses */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pl-4 border-l-2 border-muted/50">
                             {turn.activePersonaIds.map((personaId) => {
                                 const persona = personas.find((p) => p.id === personaId);
                                 if (!persona) return null;
+
+                                // Construct history for this turn (all previous turns)
+                                const turnIndex = turns.findIndex(t => t.id === turn.id);
+                                const history = turns.slice(0, turnIndex).flatMap(prevTurn => {
+                                    const msgs = [];
+                                    // 1. The prompt for that turn
+                                    msgs.push({ role: 'user', content: prevTurn.prompt || prevTurn.userMessage });
+
+                                    // 2. The responses from that turn
+                                    const prevResponses = turnResponses[prevTurn.id];
+                                    if (prevResponses) {
+                                        Object.entries(prevResponses).forEach(([pId, content]) => {
+                                            const pName = personas.find(p => p.id === pId)?.name || 'Unknown';
+                                            msgs.push({ role: 'assistant', content: `[${pName}]: ${content}` });
+                                        });
+                                    }
+                                    return msgs;
+                                });
+
                                 return (
                                     <PersonaBubble
                                         key={`${turn.id}-${persona.id}`}
                                         persona={persona}
                                         userMessage={turn.prompt}
+                                        history={history}
                                         onFinish={(content) => handlePersonaFinish(turn.id, persona.id, content)}
                                     />
                                 );
@@ -137,16 +202,7 @@ export default function MultiAgentChat() {
             </div>
 
             <div className="border-t pt-4 bg-background space-y-2">
-                {turns.length > 0 && (
-                    <div className="flex justify-center">
-                        <button
-                            onClick={handleDebate}
-                            className="text-xs text-muted-foreground hover:text-primary underline"
-                        >
-                            Trigger Debate Round
-                        </button>
-                    </div>
-                )}
+                {/* Manual trigger hidden or optional - PRD wants automatic. Keeping hidden for now as handled by effect */}
                 <form onSubmit={handleSubmit} className="flex gap-2">
                     <textarea
                         value={input}

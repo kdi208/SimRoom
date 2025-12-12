@@ -9,7 +9,7 @@ export default function Home() {
       </div>
       <div className="flex-1 flex flex-col h-full">
         <div className="border-b p-4 bg-card shadow-sm sticky top-0 z-10">
-          <h1 className="text-xl font-bold text-center">Project Council</h1>
+          <h1 className="text-xl font-bold text-center">SimRoom</h1>
         </div>
         <div className="flex-1 overflow-hidden">
           <MultiAgentChat />

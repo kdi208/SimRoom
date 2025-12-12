@@ -99,7 +99,7 @@ export default function MultiAgentChat() {
     };
 
     return (
-        <div className="flex flex-col h-screen max-w-5xl mx-auto p-4 gap-4">
+        <div className="flex flex-col h-full max-w-5xl mx-auto p-4 gap-4">
             <div className="flex-1 overflow-y-auto space-y-8 pr-2" ref={scrollRef}>
                 {turns.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">

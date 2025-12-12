@@ -37,10 +37,8 @@ export function PersonaBubble({ persona, userMessage, history = [], onFinish }: 
         }
     }, [userMessage, complete, persona.systemInstruction, history]);
 
-    // Only hide if we have nothing: no completion, no loading, and no error
-    if (!completion && !isLoading && !error) {
-        return null;
-    }
+    // Always render the bubble shell so we can see what's happening
+    // if (!completion && !isLoading && !error) { return null; }
 
     return (
         <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -55,6 +53,7 @@ export function PersonaBubble({ persona, userMessage, history = [], onFinish }: 
                     </span>
                 </div>
                 <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {!completion && isLoading && <span className="text-muted-foreground italic">Thinking...</span>}
                     {completion}
                     {isLoading && <span className="animate-pulse ml-1">▋</span>}
                     {error && <span className="text-destructive text-xs block mt-2">Error: {error.message}</span>}

@@ -202,6 +202,10 @@ export default function MultiAgentChat() {
             </div>
 
             <div className="border-t pt-4 bg-background space-y-2">
+                {/* Debug info - remove later */}
+                <div className="text-xs text-muted-foreground px-2">
+                    Debug: Input length: {input.length} | Active personas: {personas.filter(p => p.isActive).length}
+                </div>
                 {/* Manual trigger hidden or optional - PRD wants automatic. Keeping hidden for now as handled by effect */}
                 <form onSubmit={handleSubmit} className="flex gap-2">
                     <textarea

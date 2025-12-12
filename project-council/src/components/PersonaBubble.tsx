@@ -24,10 +24,11 @@ export function PersonaBubble({ persona, userMessage, history = [], onFinish }: 
     const hasTriggeredRef = useRef(false);
     const lastUserMessageRef = useRef('');
 
-    // Trigger completion when userMessage changes and is not empty
+    // Trigger completion on mount
     useEffect(() => {
-        if (userMessage && userMessage !== lastUserMessageRef.current) {
-            lastUserMessageRef.current = userMessage;
+        // If we haven't started (no completion, not loading, no error), trigger it.
+        // We rely on the parent giving us a unique key per turn so we don't need to track prop changes.
+        if (!completion && !isLoading && !error) {
             complete(userMessage, {
                 body: {
                     systemPrompt: persona.systemInstruction,
@@ -35,10 +36,7 @@ export function PersonaBubble({ persona, userMessage, history = [], onFinish }: 
                 }
             });
         }
-    }, [userMessage, complete, persona.systemInstruction, history]);
-
-    // Always render the bubble shell so we can see what's happening
-    // if (!completion && !isLoading && !error) { return null; }
+    }, []); // Run once on mount
 
     return (
         <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -57,6 +55,9 @@ export function PersonaBubble({ persona, userMessage, history = [], onFinish }: 
                     {completion}
                     {isLoading && <span className="animate-pulse ml-1">▋</span>}
                     {error && <span className="text-destructive text-xs block mt-2">Error: {error.message}</span>}
+
+                    {/* Debug Info - Remove before production */}
+                    {!completion && !isLoading && !error && <span className="text-xs text-orange-500 block mt-2">Waiting to start...</span>}
                 </div>
             </div>
         </div>

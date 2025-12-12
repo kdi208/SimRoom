@@ -14,12 +14,8 @@ interface PersonaBubbleProps {
 }
 
 export function PersonaBubble({ persona, userMessage, history = [], onFinish }: PersonaBubbleProps) {
-    const { completion, complete, isLoading } = useCompletion({
+    const { completion, complete, isLoading, error } = useCompletion({
         api: '/api/chat/persona',
-        body: {
-            systemPrompt: persona.systemInstruction,
-            history: history,
-        },
         onFinish: (prompt, completion) => {
             onFinish?.(completion);
         },
@@ -32,11 +28,17 @@ export function PersonaBubble({ persona, userMessage, history = [], onFinish }: 
     useEffect(() => {
         if (userMessage && userMessage !== lastUserMessageRef.current) {
             lastUserMessageRef.current = userMessage;
-            complete(userMessage);
+            complete(userMessage, {
+                body: {
+                    systemPrompt: persona.systemInstruction,
+                    history: history,
+                }
+            });
         }
-    }, [userMessage, complete]);
+    }, [userMessage, complete, persona.systemInstruction, history]);
 
-    if (!completion && !isLoading) {
+    // Only hide if we have nothing: no completion, no loading, and no error
+    if (!completion && !isLoading && !error) {
         return null;
     }
 
@@ -55,6 +57,7 @@ export function PersonaBubble({ persona, userMessage, history = [], onFinish }: 
                 <div className="text-sm leading-relaxed whitespace-pre-wrap">
                     {completion}
                     {isLoading && <span className="animate-pulse ml-1">▋</span>}
+                    {error && <span className="text-destructive text-xs block mt-2">Error: {error.message}</span>}
                 </div>
             </div>
         </div>

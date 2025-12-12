@@ -40,25 +40,44 @@ export function PersonaBubble({ persona, userMessage, history = [], onFinish }: 
     }, []); // Run once on mount
 
     return (
-        <div className="flex gap-4 p-4 border rounded-lg bg-card text-card-foreground shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className={twMerge("w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 font-bold", persona.avatarColor)}>
+        <div className="flex gap-3 max-w-[85%] animate-in fade-in slide-in-from-left-2 duration-300">
+            {/* Avatar */}
+            <div className={twMerge(
+                "w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0 font-bold text-sm shadow-md",
+                persona.avatarColor
+            )}>
                 {persona.name.charAt(0)}
             </div>
+
+            {/* Message Bubble */}
             <div className="flex flex-col gap-1 min-w-0">
-                <div className="flex items-center gap-2">
+                {/* Name and Role */}
+                <div className="flex items-center gap-2 pl-1">
                     <span className="font-semibold text-sm">{persona.name}</span>
-                    <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-muted">
+                    <span className="text-xs text-muted-foreground">
                         {persona.role}
                     </span>
                 </div>
-                <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {!completion && isLoading && <span className="text-muted-foreground italic">Thinking...</span>}
-                    {completion}
-                    {isLoading && <span className="animate-pulse ml-1">▋</span>}
-                    {error && <span className="text-destructive text-xs block mt-2">Error: {error.message}</span>}
 
-                    {/* Debug Info - Remove before production */}
-                    {!completion && !isLoading && !error && <span className="text-xs text-orange-500 block mt-2">Waiting to start...</span>}
+                {/* Chat Bubble */}
+                <div className="bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm">
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {!completion && isLoading && (
+                            <span className="text-muted-foreground italic flex items-center gap-2">
+                                <span className="flex gap-1">
+                                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                </span>
+                            </span>
+                        )}
+                        {completion}
+                        {isLoading && completion && <span className="animate-pulse ml-1">▋</span>}
+                        {error && <span className="text-destructive text-xs block mt-2">Error: {error.message}</span>}
+                        {!completion && !isLoading && !error && (
+                            <span className="text-muted-foreground italic">Waiting...</span>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

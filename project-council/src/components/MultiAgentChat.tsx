@@ -138,8 +138,8 @@ export default function MultiAgentChat() {
     };
 
     return (
-        <div className="flex flex-col h-full max-w-5xl mx-auto p-4 gap-4">
-            <div className="flex-1 overflow-y-auto space-y-8 pr-2" ref={scrollRef}>
+        <div className="flex flex-col h-full max-w-2xl mx-auto p-4 gap-4">
+            <div className="flex-1 overflow-y-auto space-y-6 pr-2" ref={scrollRef}>
                 {turns.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
                         <p>Select personas and say hello!</p>
@@ -162,8 +162,8 @@ export default function MultiAgentChat() {
                         </div>
 
 
-                        {/* Parallel Persona Responses */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pl-4 border-l-2 border-muted/50">
+                        {/* Persona Responses - Vertical Chat Thread */}
+                        <div className="space-y-3">
                             {turn.activePersonaIds.map((personaId) => {
                                 const persona = personas.find((p) => p.id === personaId);
                                 if (!persona) return null;
@@ -202,10 +202,6 @@ export default function MultiAgentChat() {
             </div>
 
             <div className="border-t pt-4 bg-background space-y-2">
-                {/* Debug info - remove later */}
-                <div className="text-xs text-muted-foreground px-2">
-                    Debug: Input length: {input.length} | Active personas: {personas.filter(p => p.isActive).length}
-                </div>
                 {/* Manual trigger hidden or optional - PRD wants automatic. Keeping hidden for now as handled by effect */}
                 <form onSubmit={handleSubmit} className="flex gap-2">
                     <textarea

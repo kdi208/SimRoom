@@ -16,6 +16,7 @@ interface PersonaBubbleProps {
 export function PersonaBubble({ persona, userMessage, history = [], onFinish }: PersonaBubbleProps) {
     const { completion, complete, isLoading, error } = useCompletion({
         api: '/api/chat/persona',
+        streamProtocol: 'text',
         onFinish: (prompt, completion) => {
             onFinish?.(completion);
         },

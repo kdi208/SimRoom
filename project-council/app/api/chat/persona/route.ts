@@ -3,9 +3,7 @@ import { streamText } from 'ai';
 
 export const runtime = 'edge';
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+const google = createGoogleGenerativeAI();
 
 export async function POST(req: Request) {
   const { prompt, systemPrompt, history } = await req.json();

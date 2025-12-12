@@ -1,4 +1,5 @@
-import { Persona, usePersonaStore } from '@/store/persona-store';
+import { usePersonaStore } from '@/src/store/persona-store';
+import { Persona } from '@/src/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { usePersonaStore } from '@/store/persona-store';
+import { usePersonaStore } from '@/src/store/persona-store';
 import { PersonaCard } from './persona-card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Persona } from '@/lib/types';
+import { Persona } from '@/src/lib/types';
 
 export function PersonaSidebar() {
     const { personas, addPersona } = usePersonaStore();

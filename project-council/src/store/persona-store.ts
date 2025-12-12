@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Persona, DEFAULT_PERSONAS } from '@/lib/types';
+import { Persona, DEFAULT_PERSONAS } from '@/src/lib/types';
 
 interface PersonaState {
     personas: Persona[];
